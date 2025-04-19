@@ -8,6 +8,7 @@ import shutil
 from datetime import datetime
 import matplotlib.pyplot as plt
 import time
+from face_similarity import FaceSimilarity
 
 # Set page config
 st.set_page_config(
@@ -18,7 +19,7 @@ st.set_page_config(
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Capture Faces", "Preprocess Dataset"])
+page = st.sidebar.radio("Go to", ["Capture Faces", "Preprocess Dataset", "Face Similarity"])
 
 class FacePreprocessor:
     def __init__(self, input_dataset_path, output_dataset_path, metadata_path):
@@ -339,6 +340,80 @@ if page == "Capture Faces":
                     frame_placeholder.empty()
                     progress_bar.empty()
                     status_text.empty()
+
+elif page == "Face Similarity":
+    st.title("Face Similarity")
+    
+    # Inisialisasi FaceSimilarity
+    face_similarity = FaceSimilarity()
+    
+    # Upload dua gambar untuk dibandingkan
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Gambar 1")
+        image1 = st.file_uploader("Upload gambar pertama", type=['jpg', 'jpeg', 'png'])
+        if image1 is not None:
+            st.image(image1, use_column_width=True)
+            
+    with col2:
+        st.subheader("Gambar 2")
+        image2 = st.file_uploader("Upload gambar kedua", type=['jpg', 'jpeg', 'png'])
+        if image2 is not None:
+            st.image(image2, use_column_width=True)
+    
+    # Tombol untuk membandingkan wajah
+    if st.button("Bandingkan Wajah") and image1 is not None and image2 is not None:
+        try:
+            # Simpan gambar sementara
+            temp_dir = Path("temp")
+            temp_dir.mkdir(exist_ok=True)
+            
+            image1_path = temp_dir / "temp1.jpg"
+            image2_path = temp_dir / "temp2.jpg"
+            
+            with open(image1_path, "wb") as f:
+                f.write(image1.getvalue())
+            with open(image2_path, "wb") as f:
+                f.write(image2.getvalue())
+            
+            # Proses gambar
+            embedding1 = face_similarity.process_image(image1_path)
+            embedding2 = face_similarity.process_image(image2_path)
+            
+            if embedding1 is None or embedding2 is None:
+                st.error("Tidak dapat mendeteksi wajah pada salah satu atau kedua gambar")
+            else:
+                # Hitung similarity score
+                similarity_score = face_similarity.compare_faces(embedding1, embedding2)
+                
+                # Visualisasi hasil
+                result_image = face_similarity.visualize_comparison(
+                    str(image1_path), 
+                    str(image2_path), 
+                    similarity_score
+                )
+                
+                # Tampilkan hasil
+                st.image(result_image, use_column_width=True)
+                
+                # Tampilkan similarity score
+                st.write(f"Similarity Score: {similarity_score:.2f}")
+                
+                # Tentukan apakah wajah sama
+                if similarity_score >= face_similarity.similarity_threshold:
+                    st.success("Wajah SAMA")
+                else:
+                    st.error("Wajah BERBEDA")
+            
+        except Exception as e:
+            st.error(f"Terjadi kesalahan: {str(e)}")
+        finally:
+            # Hapus file temporary
+            if os.path.exists(image1_path):
+                os.remove(image1_path)
+            if os.path.exists(image2_path):
+                os.remove(image2_path)
 
 else:  # Preprocess Dataset page
     # Title and description
