@@ -362,6 +362,11 @@ elif page == "Face Similarity":
         if image2 is not None:
             st.image(image2, use_column_width=True)
     
+    # Tampilkan threshold yang digunakan
+    st.info(f"Threshold yang digunakan: {face_similarity.similarity_threshold:.2f}")
+    st.caption("Jika similarity score ≥ threshold, wajah dianggap SAMA")
+    st.caption("Jika similarity score < threshold, wajah dianggap BERBEDA")
+    
     # Tombol untuk membandingkan wajah
     if st.button("Bandingkan Wajah") and image1 is not None and image2 is not None:
         try:
@@ -397,14 +402,18 @@ elif page == "Face Similarity":
                 # Tampilkan hasil
                 st.image(result_image, use_column_width=True)
                 
-                # Tampilkan similarity score
-                st.write(f"Similarity Score: {similarity_score:.2f}")
+                # Tampilkan similarity score dan perbandingan dengan threshold
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Similarity Score", f"{similarity_score:.2f}")
+                with col2:
+                    st.metric("Threshold", f"{face_similarity.similarity_threshold:.2f}")
                 
                 # Tentukan apakah wajah sama
                 if similarity_score >= face_similarity.similarity_threshold:
-                    st.success("Wajah SAMA")
+                    st.success(f"Wajah SAMA (Score {similarity_score:.2f} ≥ Threshold {face_similarity.similarity_threshold:.2f})")
                 else:
-                    st.error("Wajah BERBEDA")
+                    st.error(f"Wajah BERBEDA (Score {similarity_score:.2f} < Threshold {face_similarity.similarity_threshold:.2f})")
             
         except Exception as e:
             st.error(f"Terjadi kesalahan: {str(e)}")

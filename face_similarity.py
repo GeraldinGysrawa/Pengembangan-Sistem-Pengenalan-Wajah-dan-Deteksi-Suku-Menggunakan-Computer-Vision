@@ -18,7 +18,7 @@ class FaceSimilarity:
             self.facenet = self.facenet.cuda()
             
         # Threshold untuk menentukan kemiripan wajah
-        self.similarity_threshold = 0.6
+        self.similarity_threshold = 0.7
         
     def detect_faces(self, image):
         """
@@ -101,13 +101,13 @@ class FaceSimilarity:
         if img1 is None or img2 is None:
             raise ValueError("Tidak dapat membaca salah satu atau kedua gambar")
         
-        # Konversi ke RGB untuk MTCNN
-        img1_rgb = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-        img2_rgb = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
+        # Konversi BGR ke RGB
+        img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
         
         # Deteksi wajah
-        boxes1, _ = self.detect_faces(Image.fromarray(img1_rgb))
-        boxes2, _ = self.detect_faces(Image.fromarray(img2_rgb))
+        boxes1, _ = self.detect_faces(Image.fromarray(img1))
+        boxes2, _ = self.detect_faces(Image.fromarray(img2))
         
         # Gambar bounding box
         if boxes1 is not None:
@@ -145,9 +145,9 @@ class FaceSimilarity:
             left = pad_width // 2
             right = pad_width - left
             
-            # Tambahkan padding
+            # Tambahkan padding dengan warna putih (255, 255, 255)
             return cv2.copyMakeBorder(image, top, bottom, left, right, 
-                                    cv2.BORDER_CONSTANT, value=[0, 0, 0])
+                                    cv2.BORDER_CONSTANT, value=[255, 255, 255])
         
         # Gabungkan gambar
         combined = np.hstack((
@@ -155,8 +155,9 @@ class FaceSimilarity:
             add_padding(img2_resized, max_height, max_width)
         ))
         
-        # Tambahkan teks similarity score
+        # Tambahkan teks similarity score (dalam RGB)
+        font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(combined, f'Similarity: {similarity_score:.2f}', 
-                   (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                   (10, 30), font, 1, (0, 200, 0), 2)
         
         return combined
