@@ -1,1 +1,3 @@
 praktikum_env/
+venv/
+*.h5
